@@ -1,0 +1,28 @@
+<launch>
+  <!-- 全局参数加载 -->
+  <arg name="cameraOffsetZ" default="0"/>
+  <arg name="vehicleX" default="0"/>
+  <arg name="vehicleY" default="0"/>
+  <arg name="checkTerrainConn" default="true"/>
+  <!-- 局部路径规划框架 -->
+  <include file="$(find local_planner)/launch/local_planner.launch" >
+    <arg name="cameraOffsetZ" value="$(arg cameraOffsetZ)"/>
+    <arg name="goalX" value="$(arg vehicleX)"/>
+    <arg name="goalY" value="$(arg vehicleY)"/>
+  </include>
+  <!-- 地形分析算法 -->
+  <include file="$(find terrain_analysis)/launch/terrain_analysis.launch" />
+
+  <!-- 地形分析扩展算法 -->
+  <include file="$(find terrain_analysis_ext)/launch/terrain_analysis_ext.launch" >
+    <arg name="checkTerrainConn" value="$(arg checkTerrainConn)"/>
+  </include>
+
+  <!-- <node pkg="tf" type="static_transform_publisher" name="mapTransPublisher" args="0 0 0 0 0 0 /map /camera_init 1000"/> -->
+
+  
+  <node pkg="tf" type="static_transform_publisher" name="lidarTransPublisher" args="0 0 0 0 0 0 /lidar_link /rslidar 1000"/>
+
+  <node launch-prefix="nice" pkg="rviz" type="rviz" name="rvizGA" args="-d $(find local_planner)/rviz/local_plan.rviz" respawn="true"/>
+
+</launch>

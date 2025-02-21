@@ -1,0 +1,97 @@
+<launch>
+
+  <arg name="sensorOffsetX" default="0"/>
+  <arg name="sensorOffsetY" default="0"/>
+  <arg name="cameraOffsetZ" default="0"/>
+  <arg name="twoWayDrive" default="false"/>  <!-- 机器人是否为双向驱动 -->
+  <arg name="maxSpeed" default="0.3"/>    <!-- 机器人的最大线速度 -->
+  <arg name="autonomyMode" default="true"/>
+  <arg name="autonomySpeed" default="2.0"/>
+  <arg name="joyToSpeedDelay" default="2.0"/>
+  <arg name="goalX" default="0"/>
+  <arg name="goalY" default="0"/>
+  <arg name="points_topic" default="/rslidar_points" />
+  <arg name="state_topic" default="/us_liorf_localization/mapping/base_odometry" />
+  <arg name="odom_topic" default="/us_liorf_localization/mapping/base_odometry" />
+
+
+  <node pkg="local_planner" type="localPlanner" name="localPlanner" output="screen" required="true">
+  
+    <param name="points_topic" value="$(arg points_topic)" />
+    <param name="state_topic" value="$(arg state_topic)" />
+  
+    <param name="pathFolder" type="string" value="$(find local_planner)/paths" />
+    <param name="vehicleLength" type="double" value="1.0" />  <!-- 机器人本体的长和宽 -->
+    <param name="vehicleWidth" type="double" value="0.7" />
+    <param name="sensorOffsetX" value="$(arg sensorOffsetX)" />
+    <param name="sensorOffsetY" value="$(arg sensorOffsetY)" />
+    <param name="twoWayDrive" value="$(arg twoWayDrive)" />
+    <param name="laserVoxelSize" type="double" value="0.05" />   <!-- 下采样体素栅格叶大小 -->
+    <param name="terrainVoxelSize" type="double" value="0.2" />
+    <param name="useTerrainAnalysis" type="bool" value="true" />
+    <param name="checkObstacle" type="bool" value="true" />
+    <param name="checkRotObstacle" type="bool" value="false" />
+    <param name="adjacentRange" type="double" value="4.25" />       <!-- 点云裁剪距离 -->
+    <param name="obstacleHeightThre" type="double" value="0.15" />   <!-- 障碍物高度阈值 -->
+    <param name="groundHeightThre" type="double" value="0.1" />    <!-- 地面高度阈值（当点云大于地面高度，小于障碍物高度时，被认为是坡度） -->
+    <param name="costHeightThre" type="double" value="0.1" />   <!-- 计算路径惩罚得分的权重 -->
+    <param name="costScore" type="double" value="0.02" />     <!-- 最小惩罚得分 --> 
+    <param name="useCost" type="bool" value="false" />
+    <param name="pointPerPathThre" type="int" value="2" />   <!-- 判断路径被遮挡的障碍物点数量 -->
+    <param name="minRelZ" type="double" value="-0.5" />     <!--未使用地面分割时，裁剪点云时的最小高度 -->
+    <param name="maxRelZ" type="double" value="0.30" />
+    <param name="maxSpeed" value="$(arg maxSpeed)" />
+    <param name="dirWeight" type="double" value="0.02" />     <!-- 计算得分时转向角度的权重 -->
+    <param name="dirThre" type="double" value="90.0" />    <!-- 转向角度阈值 -->
+    <param name="dirToVehicle" type="bool" value="false" />    <!-- 是否以车辆为主方向计算被遮挡路径 -->
+    <param name="pathScale" type="double" value="1.25" />
+    <param name="minPathScale" type="double" value="0.75" />
+    <param name="pathScaleStep" type="double" value="0.25" />
+    <param name="pathScaleBySpeed" type="bool" value="true" />
+    <param name="minPathRange" type="double" value="1.0" />
+    <param name="pathRangeStep" type="double" value="0.5" />
+    <param name="pathRangeBySpeed" type="bool" value="true" />    <!-- 是否根据速度调整路径范围 -->
+    <param name="pathCropByGoal" type="bool" value="true" />
+    <param name="autonomyMode" value="$(arg autonomyMode)" />
+    <param name="autonomySpeed" value="$(arg autonomySpeed)" />
+    <param name="joyToSpeedDelay" value="$(arg joyToSpeedDelay)" />
+    <param name="joyToCheckObstacleDelay" type="double" value="5.0" />
+    <param name="goalClearRange" type="double" value="0.5" />
+    <param name="goalX" type="double" value="$(arg goalX)" />
+    <param name="goalY" type="double" value="$(arg goalY)" />
+  </node>
+
+  <node pkg="local_planner" type="pathFollower" name="pathFollower" output="screen" required="true">
+    <param name="sensorOffsetX" value="$(arg sensorOffsetX)" />
+    <param name="sensorOffsetY" value="$(arg sensorOffsetY)" />
+    <param name="odom_topic" value="$(arg odom_topic)" />
+
+    <param name="pubSkipNum" type="int" value="1" />    <!-- 每个cmd_vel的发布次数 -->
+    <param name="twoWayDrive" value="$(arg twoWayDrive)" />
+    <param name="lookAheadDis" type="double" value="0.5" />   <!-- 前视距离 -->
+    <param name="yawRateGain" type="double" value="7.5" />
+    <param name="stopYawRateGain" type="double" value="7.5" />
+    <param name="maxYawRate" type="double" value="25.0" />   <!-- 最大旋转速度 -->
+    <param name="maxSpeed" value="$(arg maxSpeed)" />
+    <param name="maxAccel" type="double" value="0.3" />   <!-- 最大加速度 -->
+    <param name="switchTimeThre" type="double" value="1.0" />
+    <param name="dirDiffThre" type="double" value="0.1" />    <!-- 方向差阈值 -->
+    <param name="stopDisThre" type="double" value="0.2" />   <!-- 停止距离阈值 -->
+    <param name="slowDwnDisThre" type="double" value="0.85" />
+    <param name="useInclRateToSlow" type="bool" value="false" />
+    <param name="inclRateThre" type="double" value="120.0" />
+    <param name="slowRate1" type="double" value="0.25" />
+    <param name="slowRate2" type="double" value="0.5" />
+    <param name="slowTime1" type="double" value="2.0" />
+    <param name="slowTime2" type="double" value="2.0" />
+    <param name="useInclToStop" type="bool" value="false" />
+    <param name="inclThre" type="double" value="45.0" />      <!-- 是否使用roll,pitch的坡度阈值 -->
+    <param name="stopTime" type="double" value="5.0" />
+    <param name="noRotAtStop" type="bool" value="false" />
+    <param name="noRotAtGoal" type="bool" value="true" />
+    <param name="autonomyMode" value="$(arg autonomyMode)" />
+    <param name="autonomySpeed" value="$(arg autonomySpeed)" />
+    <param name="joyToSpeedDelay" value="$(arg joyToSpeedDelay)" />
+  </node>
+
+</launch>
